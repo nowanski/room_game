@@ -203,6 +203,7 @@ def handle_move(current_room, inventory, user_input):
                 current_room = previous_room
             else:
                 print(f"You moved {user_input}.")
+                finish_game()
 
         else:
             print(f"You moved {user_input}.")
@@ -210,6 +211,11 @@ def handle_move(current_room, inventory, user_input):
         print("Invalid input. Try again.")
 
     return current_room
+
+
+def finish_game():
+    print("You won the game!")
+    quit()
 
 
 def make_sure_you_have_a_sword(current_room, inventory, previous_room, user_input):
@@ -269,7 +275,14 @@ def handle_item(current_room, inventory, user_input):
                 room.turn_on_light()
 
         elif item_to_use.name == "Sword":
-            print("You pulled out your sword.")
+            for character in current_room.characters:
+                if character.name == "Guard":
+                    print("You killed the guard.")
+                    current_room.remove_character(character)
+                    print("You can now move to room 5.")
+                else:
+                    print("There are no enemies in this room.")
+
         else:
             print("Invalid input. Try again.")
 
