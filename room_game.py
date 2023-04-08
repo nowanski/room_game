@@ -12,10 +12,11 @@ class Room:
         # create a function that will add an item to the room
 
     # create a method that will check if the room has a character
-    def has_character(self, character):
-        if character in self.characters:
-            return True
-    # create a method that will toggle the light
+    def has_character(self, search_character):
+        for character in self.characters:
+            if character.name.lower() == search_character.lower():
+                return True
+        return False
 
     def toggle_light(self):
         self.is_light = not self.is_light
@@ -119,7 +120,6 @@ def world():
     room3.close_door()
     room4 = Room("Room 4", "This is room 4.")
     room5 = Room("Room 5", "This is room 5.")
-    room5.close_door()
 
     item_key = Item("Key", "A key unlocks a door.")
     item_torch = Item("Torch", "A torch to light your way.")
@@ -195,11 +195,15 @@ def handle_move(current_room, inventory, user_input):
             current_room = previous_room
         elif not current_room.is_door_open():
             current_room = handle_closed_door(current_room, inventory, previous_room, user_input)
-        elif current_room.name == "Room 4":
+        elif current_room.name == "Room 3":
             current_room = make_sure_you_have_a_sword(current_room, inventory, previous_room, user_input)
         elif current_room.name == "Room 5":
-            print("You have won the game!")
-            quit()
+            if previous_room.has_character("Guard"):
+                print("You can't move to room 5 until you kill the guard.")
+                current_room = previous_room
+            else:
+                print(f"You moved {user_input}.")
+
         else:
             print(f"You moved {user_input}.")
     else:
