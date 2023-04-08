@@ -6,12 +6,17 @@ class Room:
         self.items = []
         self.exits = {}
         self.characters = []
-        self.is_light = False
+        self.is_light = True
         self.is_open = True
 
         # create a function that will add an item to the room
 
+    # create a method that will check if the room has a character
+    def has_character(self, character):
+        if character in self.characters:
+            return True
     # create a method that will toggle the light
+
     def toggle_light(self):
         self.is_light = not self.is_light
 
@@ -28,13 +33,13 @@ class Room:
         self.is_open = True
 
     # create a method that will close the door
+
     def close_door(self):
         self.is_open = False
 
     # create a method that will check if the door is open
     def is_door_open(self):
         return self.is_open
-
 
     def add_item(self, item):
         self.items.append(item)
@@ -113,6 +118,8 @@ def world():
     room3 = Room("Room 3", "This is room 3.")
     room3.close_door()
     room4 = Room("Room 4", "This is room 4.")
+    room5 = Room("Room 5", "This is room 5.")
+    room5.close_door()
 
     item_key = Item("Key", "A key unlocks a door.")
     item_torch = Item("Torch", "A torch to light your way.")
@@ -126,6 +133,8 @@ def world():
     room3.add_exit("down", room2)
     room3.add_exit("right", room4)
     room4.add_exit("left", room3)
+    room4.add_exit("up", room5)
+    room5.add_exit("down", room4)
 
     room1.add_item(item_torch)
     room4.add_character(character_guard)
@@ -150,12 +159,7 @@ def game_loop():
         describe_room(current_room)
         describe_items_in_a_room(current_room)
         describe_characters_in_a_room(current_room)
-
-        # display the available actions using the actions array keys
-        print("Actions:")
-        for action in actions.keys():
-            print(f"{action}")
-
+        display_all_actions()
         showing_inventory(inventory)
 
         # get user input
@@ -163,70 +167,9 @@ def game_loop():
 
         # process user input
         if user_input == "move":
-            display_actions(user_input)
-            user_input = input("Which direction you want to move? ").lower()
-            if user_input in current_room.exits:
-                previous_room = current_room
-                current_room = current_room.exits[user_input]
-                # check if the light is on
-                if not current_room.is_light_on():
-                    print("It is too dark to see you need to turn on the torch.")
-                    current_room = previous_room
-
-                else:
-                    print(f"You moved {user_input}.")
-                if current_room.is_door_open():
-                    print(f"You moved {user_input}.")
-                else:
-                    if inventory.search_item("key") is not None:
-                        print("You used the key to open the door.")
-                        current_room.open_door()
-                        print(f"You moved {user_input}.")
-                    else:
-                        print("The door is locked you need a key to open the door.")
-                        current_room = previous_room
-            else:
-                print("Invalid input. Try again.")
+            current_room = handle_move(current_room, inventory, user_input)
         elif user_input == "item":
-            display_actions(user_input)
-            user_input = input("What would you like to do with the item? ").lower()
-            if user_input == "take":
-                if len(current_room.items) == 0:
-                    print("There are no items in this room.")
-                else:
-                    describe_items_in_a_room(current_room)
-                    user_input = input("What item would you like to take? ").lower()
-                    item_to_take = current_room.search_item(user_input)
-                    current_room.remove_item(item_to_take)
-                    inventory.add_item(item_to_take)
-                    showing_inventory(inventory)
-            elif user_input == "drop":
-                if len(inventory.items) == 0:
-                    print("There are no items in your inventory.")
-                else:
-                    showing_inventory(inventory)
-                    user_input = input("What item would you like to drop? ").lower()
-                    item_to_drop = inventory.search_item(user_input)
-                    inventory.remove_item(item_to_drop)
-                    current_room.add_item(item_to_drop)
-                    showing_inventory(inventory)
-            elif user_input == "use":
-                showing_inventory(inventory)
-                user_input = input("What item would you like to use? ").lower()
-                item_to_use = inventory.search_item(user_input)
-                if item_to_use.name == "Key":
-                    print("You unlocked the door.")
-
-                elif item_to_use.name == "Torch":
-                    print("You lit the torch.")
-                #    toggle the light in th next room
-                    for room in current_room.exits.values():
-                        room.turn_on_light()
-
-                elif item_to_use.name == "Sword":
-                    print("You pulled out your sword.")
-                else:
-                    print("Invalid input. Try again.")
+            handle_item(current_room, inventory, user_input)
         elif user_input == "help":
             print("You can move, take, drop, use, and quit.")
         elif user_input == "quit":
@@ -234,6 +177,97 @@ def game_loop():
             break
 
 
+def display_all_actions():
+    print("Actions:")
+    for action in actions.keys():
+        print(f"{action}")
+
+
+def handle_move(current_room, inventory, user_input):
+    display_actions(user_input)
+    user_input = input("Which direction you want to move? ").lower()
+    if user_input in current_room.exits:
+        previous_room = current_room
+        current_room = current_room.exits[user_input]
+        # check if the light is on
+        if not current_room.is_light_on():
+            print("It is too dark to see you need to turn on the torch.")
+            current_room = previous_room
+        elif not current_room.is_door_open():
+            current_room = handle_closed_door(current_room, inventory, previous_room, user_input)
+        elif current_room.name == "Room 4":
+            current_room = make_sure_you_have_a_sword(current_room, inventory, previous_room, user_input)
+        elif current_room.name == "Room 5":
+            print("You have won the game!")
+            quit()
+        else:
+            print(f"You moved {user_input}.")
+    else:
+        print("Invalid input. Try again.")
+
+    return current_room
+
+
+def make_sure_you_have_a_sword(current_room, inventory, previous_room, user_input):
+    if inventory.search_item("sword") is None:
+        print("You can't move to room 4 without a sword to protect yourself.")
+        current_room = previous_room
+    else:
+        print(f"You moved {user_input}.")
+    return current_room
+
+
+def handle_closed_door(current_room, inventory, previous_room, user_input):
+    if inventory.search_item("key") is not None:
+        print("You used the key to open the door.")
+        current_room.open_door()
+        print(f"You moved {user_input}.")
+    else:
+        print("The door is locked you need a key to open the door.")
+        current_room = previous_room
+    return current_room
+
+
+def handle_item(current_room, inventory, user_input):
+    display_actions(user_input)
+    user_input = input("What would you like to do with the item? ").lower()
+    if user_input == "take":
+        if len(current_room.items) == 0:
+            print("There are no items in this room.")
+        else:
+            describe_items_in_a_room(current_room)
+            user_input = input("What item would you like to take? ").lower()
+            item_to_take = current_room.search_item(user_input)
+            current_room.remove_item(item_to_take)
+            inventory.add_item(item_to_take)
+            showing_inventory(inventory)
+    elif user_input == "drop":
+        if len(inventory.items) == 0:
+            print("There are no items in your inventory.")
+        else:
+            showing_inventory(inventory)
+            user_input = input("What item would you like to drop? ").lower()
+            item_to_drop = inventory.search_item(user_input)
+            inventory.remove_item(item_to_drop)
+            current_room.add_item(item_to_drop)
+            showing_inventory(inventory)
+    elif user_input == "use":
+        showing_inventory(inventory)
+        user_input = input("What item would you like to use? ").lower()
+        item_to_use = inventory.search_item(user_input)
+        if item_to_use.name == "Key":
+            print("You unlocked the door.")
+
+        elif item_to_use.name == "Torch":
+            print("You lit the torch.")
+            #    toggle the light in th next room
+            for room in current_room.exits.values():
+                room.turn_on_light()
+
+        elif item_to_use.name == "Sword":
+            print("You pulled out your sword.")
+        else:
+            print("Invalid input. Try again.")
 
 
 def showing_inventory(inventory):
