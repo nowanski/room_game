@@ -3,11 +3,11 @@ class Map:
         self.rooms = rooms
         self.map = {}
 
-    #     create a function that describes the map which character represents what, like a legend
     def map_legend(self):
         print("Map Legend:")
         print("R = Room")
         print("* = Current Room")
+        print("Items and characters are listed inside the room's square brackets.")
         print("=====================================")
 
     def build_map(self):
@@ -54,10 +54,12 @@ class Map:
                         break
                 if room is not None:
                     room_number = self.rooms.index(room) + 1
-                    room_marker = "[R{}{}]".format(room_number, "*" if room == current_room else "")
-                    row += room_marker
+                    items = ", ".join(item.name for item in room.items)
+                    characters = ", ".join(character.name for character in room.characters)
+                    room_marker = "R{}{}{}{}".format(room_number, "*" if room == current_room else "", f"({items})" if items else "",f"<{characters}>" if characters else "")
+                    row += f"[{room_marker: <12}]"
                 else:
-                    row += "    "
+                    row += " " * 14
             print(row)
         print("=====================================")
         self.map_legend()
