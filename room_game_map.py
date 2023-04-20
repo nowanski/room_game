@@ -3,6 +3,13 @@ class Map:
         self.rooms = rooms
         self.map = {}
 
+    #     create a function that describes the map which character represents what, like a legend
+    def map_legend(self):
+        print("Map Legend:")
+        print("R = Room")
+        print("* = Current Room")
+        print("=====================================")
+
     def build_map(self):
         for room in self.rooms:
             self.map[room] = {}
@@ -53,3 +60,4 @@ class Map:
                     row += "    "
             print(row)
         print("=====================================")
+        self.map_legend()

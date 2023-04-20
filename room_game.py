@@ -155,7 +155,6 @@ def game_loop():
     inventory = Inventory()
     current_room, game_map = world()
     print("Welcome to the game!")
-    game_map.draw_map(current_room)
 
     # create a while loop that will run until the player has won or lost
     while True:
@@ -163,6 +162,7 @@ def game_loop():
         print(f"You are in the {current_room.name}.")
         print(current_room.description)
 
+        game_map.draw_map(current_room)
         describe_room(current_room)
         describe_items_in_a_room(current_room)
         describe_characters_in_a_room(current_room)
