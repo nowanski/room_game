@@ -1,4 +1,7 @@
 # create a room class that will have a name, description, items, exits and characters.items and characters will be an array and exits will be a dictionary
+from room_game_map import Map
+
+
 class Room:
     def __init__(self, name, description):
         self.name = name
@@ -71,7 +74,6 @@ class Room:
                 return item
         return None
 
-
 # create an item that will have a name and a description
 class Item:
     def __init__(self, name, description):
@@ -141,14 +143,19 @@ def world():
     room2.add_item(item_key)
     room3.add_item(item_sword)
 
-    return room1
+    # i need a list that will hold all the rooms
+    rooms = [room1, room2, room3, room4, room5]
+    game_map = Map(rooms)
+
+    return room1, game_map
 
 
 # create a game loop that starts with creating the world and then creates a player and a current room variable
 def game_loop():
     inventory = Inventory()
-    current_room = world()
+    current_room, game_map = world()
     print("Welcome to the game!")
+    game_map.draw_map(current_room)
 
     # create a while loop that will run until the player has won or lost
     while True:
